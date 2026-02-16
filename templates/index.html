@@ -9,6 +9,7 @@
         pre { white-space: pre-wrap; background:#f7f7f7; padding:10px; border-radius:6px;}
         button { padding:10px 18px; font-size:15px; }
         select { padding:6px; }
+        .hint { color:#666; font-size:14px; margin-top:6px; }
     </style>
 </head>
 <body>
@@ -18,11 +19,15 @@
 
 <form id="form">
     <label><b>Enter Text</b></label><br>
-    <textarea name="text" placeholder="Type a post here..."></textarea>
+    <textarea id="textInput" name="text" placeholder="Type a post here..."></textarea>
+
+    <p id="inputHint" class="hint">
+        You can either paste text OR upload a PDF.
+    </p>
 
     <br><br>
     <label><b>Upload File (optional)</b></label><br>
-    <input type="file" name="file">
+    <input id="fileInput" type="file" name="file">
 
     <br><br>
     <label><b>Analyze opinions from:</b></label><br>
@@ -55,6 +60,50 @@
 </div>
 
 <script>
+
+const textInput = document.getElementById("textInput");
+const fileInput = document.getElementById("fileInput");
+const hint = document.getElementById("inputHint");
+const formEl = document.getElementById("form");
+
+function updateInputState() {
+
+    if (textInput.value.trim().length > 0) {
+        fileInput.disabled = true;
+        hint.innerText = "File upload disabled because text is present. Clear text to upload a PDF.";
+    } 
+    else if (fileInput.files.length > 0) {
+        textInput.disabled = true;
+        hint.innerText = "File selected. Text input will be ignored.";
+    } 
+    else {
+        fileInput.disabled = false;
+        textInput.disabled = false;
+        hint.innerText = "You can either paste text OR upload a PDF.";
+    }
+}
+
+textInput.addEventListener("input", () => {
+    if (textInput.value.trim().length === 0) {
+        fileInput.disabled = false;
+    }
+    updateInputState();
+});
+
+fileInput.addEventListener("change", () => {
+    if (fileInput.files.length === 0) {
+        textInput.disabled = false;
+    }
+    updateInputState();
+});
+
+formEl.addEventListener("submit", (e) => {
+    if (!textInput.value.trim() && fileInput.files.length === 0) {
+        alert("Please enter text OR upload a file.");
+        e.preventDefault();
+    }
+});
+
 document.getElementById("form").onsubmit = async (e) => {
     e.preventDefault();
 
@@ -82,40 +131,14 @@ document.getElementById("form").onsubmit = async (e) => {
         "\n\nPublic Sentiment:\n" + JSON.stringify(data.public_sentiment, null, 2);
 
     document.getElementById("feedback").innerText =
-    "Tone Comparison:\n" + data.analysis.tone_comparison +
-    "\n\nTips:\n- " + data.analysis.tips.join("\n- ") +
-    "\n\nImproved Post:\n" + data.analysis.rewritten_post;
+        "Tone Comparison:\n" + data.analysis.tone_comparison +
+        "\n\nTips:\n- " + data.analysis.tips.join("\n- ") +
+        "\n\nImproved Post:\n" + data.analysis.rewritten_post;
 };
 
-const textArea = document.querySelector("textarea[name='text']");
-const fileInput = document.querySelector("input[name='file']");
-const form = document.getElementById("form");
-
-textArea.addEventListener("input", () => {
-    if (textArea.value.trim().length > 0) {
-        fileInput.disabled = true;
-    } else {
-        fileInput.disabled = false;
-    }
-});
-
-fileInput.addEventListener("change", () => {
-    if (fileInput.files.length > 0) {
-        textArea.disabled = true;
-    } else {
-        textArea.disabled = false;
-    }
-});
-
-form.addEventListener("submit", (e) => {
-    if (!textArea.value.trim() && fileInput.files.length === 0) {
-        alert("Please enter text OR upload a file.");
-        e.preventDefault();
-    }
-});
+updateInputState();
 
 </script>
-
 
 </body>
 </html>
