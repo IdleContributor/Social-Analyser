@@ -1,6 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query
 import pdfplumber
-from pdf2image import convert_from_bytes
 import io
 import os
 
@@ -34,7 +33,6 @@ reader = None
 def extract_from_pdf(file_bytes: bytes) -> str:
     text = ""
 
-    # 1️⃣ Try normal selectable text extraction
     try:
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
             for page in pdf.pages:
@@ -42,21 +40,16 @@ def extract_from_pdf(file_bytes: bytes) -> str:
                 if page_text:
                     text += page_text + "\n"
     except Exception:
-        pass
+        raise HTTPException(status_code=400, detail="Failed to read PDF")
 
-    # 2️⃣ If empty → scanned PDF → OCR fallback
     if not text.strip():
-        try:
-            images = convert_from_bytes(file_bytes)
-            for img in images:
-                img_bytes = io.BytesIO()
-                img.save(img_bytes, format="PNG")
-                results = reader.readtext(img_bytes.getvalue())
-                text += " ".join([res[1] for res in results]) + "\n"
-        except Exception:
-            raise HTTPException(status_code=400, detail="Failed to process PDF file")
+        raise HTTPException(
+            status_code=400,
+            detail="Scanned PDFs are not supported in hosted version. Please upload a text-based PDF."
+        )
 
     return text.strip()
+
 
 
 def extract_from_image(file_bytes: bytes) -> str:

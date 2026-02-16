@@ -3,7 +3,6 @@ uvicorn
 python-multipart
 jinja2
 pdfplumber
-pdf2image
 pillow
 ddgs
 newsapi-python
