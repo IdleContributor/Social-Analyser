@@ -1,8 +1,8 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query
 import pdfplumber
-import easyocr
 from pdf2image import convert_from_bytes
 import io
+import os
 
 from topic import extract_topics
 from query_builder import build_search_query
@@ -23,7 +23,10 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 # Load OCR model once at startup
-reader = easyocr.Reader(['en'], gpu=False)
+import os
+RENDER_ENV = os.getenv("RENDER") is not None
+reader = None
+
 
 
 # ---------- TEXT EXTRACTION FUNCTIONS ----------
@@ -57,11 +60,10 @@ def extract_from_pdf(file_bytes: bytes) -> str:
 
 
 def extract_from_image(file_bytes: bytes) -> str:
-    try:
-        results = reader.readtext(file_bytes)
-        return " ".join([res[1] for res in results]).strip()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Failed to read image")
+    raise HTTPException(
+        status_code=400,
+        detail="Image OCR is disabled in the hosted version due to memory limits. Please upload a PDF or text."
+    )
 
 
 # ---------- API ROUTE ----------

@@ -5,7 +5,6 @@ jinja2
 pdfplumber
 pdf2image
 pillow
-easyocr
 ddgs
 newsapi-python
 requests
