@@ -101,6 +101,6 @@ User history dashboard
 
 ```
 
-##Author
+## Author
 
 Simarjot Singh
